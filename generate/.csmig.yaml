@@ -1,6 +1,0 @@
-project_root: /home/jeph/projects/cscoding21/csmig
-generator_path: migrations
-implementation_name: csmig
-
-generator_package: migrations
-version_strategy: surrealdb

@@ -21,7 +21,7 @@ func ApplyMigration(strategy persistence.DatabaseStrategy, name string) error {
 	return strategy.ApplyMigration(strategy.DBConfig, name)
 }
 
-func FindApplyMigrations(strategy persistence.DatabaseStrategy) ([]shared.AppliedMigration, error) {
+func FindAppliedMigrations(strategy persistence.DatabaseStrategy) ([]shared.AppliedMigration, error) {
 	return strategy.FindAppliedMigrations(strategy.DBConfig)
 }
 
@@ -29,8 +29,8 @@ func RollbackMigration(strategy persistence.DatabaseStrategy, name string) error
 	return strategy.RollbackMigration(strategy.DBConfig, name)
 }
 
-// FindDiscoveredMigrations iterated over files in the migratin path and return all created migrations
-func FindDiscoveredMigrations(manifest shared.Manifest) []shared.Migration {
+// FindDiscoveredMigrationFiles iterated over files in the migratin path and return all created migrations
+func FindDiscoveredMigrationFiles(manifest shared.Manifest) []shared.Migration {
 	migrations := []shared.Migration{}
 
 	files, err := filepath.Glob(path.Join(manifest.GetMigrationPath(), "/m*_gen.go"))

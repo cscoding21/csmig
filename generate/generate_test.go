@@ -7,7 +7,7 @@ import (
 )
 
 func TestNewMigration(t *testing.T) {
-	manifest := shared.GetManifestPath(".csmig.yaml")
+	manifest := shared.GetManifestPath("../migrations/.csmig.yaml")
 	err := NewMigration(manifest, "test migration")
 	if err != nil {
 		t.Error(err)
@@ -15,7 +15,7 @@ func TestNewMigration(t *testing.T) {
 }
 
 func TestWriteCatalogFile(t *testing.T) {
-	manifest := shared.LoadManifest(".csmig.yaml")
+	manifest := shared.LoadManifest("../migrations/.csmig.yaml")
 	err := writeCatalogFile(manifest)
 	if err != nil {
 		t.Error(err)

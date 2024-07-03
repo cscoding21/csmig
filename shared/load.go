@@ -12,7 +12,7 @@ import (
 
 // LoadManifest loads the manifest file and returns a slice of ObjectMap structs.
 func LoadManifest(path ...string) Manifest {
-	mp := GetManifestPath(path...)
+	mp := getManifestPath(path...)
 	log.Printf("Loading manifest file: %s\n", path)
 	yfile, err := os.ReadFile(mp)
 	if err != nil {
@@ -32,7 +32,7 @@ func LoadManifest(path ...string) Manifest {
 	return manifest
 }
 
-func GetManifestPath(manifestPath ...string) string {
+func getManifestPath(manifestPath ...string) string {
 	pwd, err := os.Getwd()
 	if err != nil {
 		log.Fatal(err)

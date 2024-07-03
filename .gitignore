@@ -23,3 +23,5 @@ go.work.sum
 
 # Ignore all go generated files
 **/*.gen.go
+
+migrations/
