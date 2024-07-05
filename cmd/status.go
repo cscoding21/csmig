@@ -17,11 +17,11 @@ package cmd
 
 import (
 	"fmt"
-	"runtime"
 
 	"github.com/cscoding21/csmig/migrate"
 	"github.com/cscoding21/csmig/persistence"
 	"github.com/cscoding21/csmig/shared"
+	"github.com/cscoding21/csmig/version"
 	"github.com/spf13/cobra"
 )
 
@@ -45,8 +45,7 @@ to quickly create a Cobra application.`,
 		applied, _ := migrate.FindAppliedMigrations(strategy)
 
 		fmt.Println("--------------- CSMig Status ---------------")
-		fmt.Println("Go Version: ", runtime.Version())
-		fmt.Println("Root Directory: ", manifest.ProjectRoot)
+		fmt.Println("CSMig Version: ", version.Version)
 		fmt.Println("Migrations Directory: ", manifest.GetMigrationPath())
 		fmt.Println("Persistence Strategy: ", manifest.VersionStrategy)
 		fmt.Println("---")
