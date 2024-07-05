@@ -17,9 +17,9 @@ type Migration struct {
 
 // AppliedMigration represents a migration that has been applied to the database.
 type AppliedMigration struct {
-	Name        string    `yaml:"name"`
-	Description string    `yaml:"description"`
-	AppliedOn   time.Time `yaml:"applied_on"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	AppliedOn   time.Time `json:"applied_on"`
 }
 
 // Manifest strongly typed respresentation of the manifest file.

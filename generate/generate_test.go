@@ -36,6 +36,15 @@ func TestNewMigration(t *testing.T) {
 	}
 }
 
+func TestRemoveMigration(t *testing.T) {
+	manifest := shared.LoadManifest("migrations/.csmig.yaml")
+	name := "m1720131749777958628"
+	err := RemoveMigration(manifest, name)
+	if err != nil {
+		t.Error("migration name should have been set")
+	}
+}
+
 func TestInit(t *testing.T) {
 	err := Init()
 	if err != nil {

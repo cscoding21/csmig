@@ -9,6 +9,7 @@ import (
 
 	"github.com/cscoding21/csgen"
 	"github.com/cscoding21/csmig/migrate"
+	"github.com/cscoding21/csmig/persistence"
 	"github.com/cscoding21/csmig/shared"
 )
 
@@ -71,6 +72,37 @@ func NewMigration(manifest shared.Manifest, description string) error {
 	err := csgen.WriteGeneratedGoFile(migrationFilePath, builder.String())
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	writeCatalogFile(manifest)
+
+	return nil
+}
+
+func RemoveMigration(manifest shared.Manifest, name string) error {
+	//---remove the migration file
+	strategy, err := persistence.GetPersistenceStrategy(manifest.VersionStrategy)
+	if err != nil {
+		return err
+	}
+
+	am, err := strategy.FindAppliedMigrations(strategy.DBConfig)
+	if err != nil {
+		return err
+	}
+
+	//---stop if the migration has already been applied as this will taint the version sequence
+	for _, m := range am {
+		if m.Name == name {
+			return fmt.Errorf("cannot remove migration %s, it has already been applied", name)
+		}
+	}
+
+	//---remove the migration file
+	migrationFilePath := path.Join(manifest.ProjectRoot, manifest.GeneratorPath, fmt.Sprintf("%s_gen.go", name))
+	err = os.Remove(migrationFilePath)
+	if err != nil {
+		return err
 	}
 
 	writeCatalogFile(manifest)

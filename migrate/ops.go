@@ -1,7 +1,6 @@
 package migrate
 
 import (
-	"fmt"
 	"log"
 	"path"
 	"path/filepath"
@@ -45,8 +44,6 @@ func FindDiscoveredMigrationFiles(manifest shared.Manifest) []shared.Migration {
 			Package:  manifest.GeneratorPackage,
 			Name:     mn,
 		})
-
-		fmt.Println(mn)
 	}
 
 	return migrations
