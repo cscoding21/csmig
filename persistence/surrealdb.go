@@ -7,9 +7,11 @@ import (
 	"github.com/surrealdb/surrealdb.go"
 )
 
-var SurrealDBStrategy = DatabaseStrategy{
+var _conn *surrealdb.DB
+
+var SurrealDBStrategy = shared.DatabaseStrategy{
 	Name: "surrealdb",
-	DBConfig: DatabaseConfig{
+	DBConfig: shared.DatabaseConfig{
 		Name:      "surrealdb",
 		Host:      "localhost",
 		Port:      9999,
@@ -18,66 +20,67 @@ var SurrealDBStrategy = DatabaseStrategy{
 		Database:  "test",
 		Namespace: "test",
 	},
-	EnsureInfrastructure: func(config DatabaseConfig) error {
-		db, err := getSurrealDB(config)
+	EnsureInfrastructure: func(config shared.DatabaseConfig) error {
+		db, err := GetConnection(config)
 		if err != nil {
 			panic(err)
 		}
 
-		defineSQL := `
-		DEFINE TABLE IF NOT EXISTS csmig_versions SCHEMAFULL;
-		DEFINE FIELD IF NOT EXISTS name ON TABLE csmig_versions TYPE string;
-		DEFINE FIELD IF NOT EXISTS applied_on ON TABLE csmig_versions TYPE datetime DEFAULT time::now();
-		DEFINE INDEX csmig_versions_name_unique ON TABLE csmig_versions COLUMNS name UNIQUE;
-		`
-
+		defineSQL := fmt.Sprintf(`
+		DEFINE TABLE IF NOT EXISTS %s SCHEMAFULL;
+		DEFINE FIELD IF NOT EXISTS name ON TABLE %s TYPE string;
+		DEFINE FIELD IF NOT EXISTS description ON TABLE %s TYPE string;
+		DEFINE FIELD IF NOT EXISTS applied_on ON TABLE %s TYPE datetime DEFAULT time::now();
+		DEFINE INDEX %s_name_unique ON TABLE %s COLUMNS name UNIQUE;
+		`, VersionTableName, VersionTableName, VersionTableName, VersionTableName, VersionTableName, VersionTableName)
 		_, err = db.Query(defineSQL, nil)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		return nil
 	},
-	ApplyMigration: func(config DatabaseConfig, name string) error {
-		db, err := getSurrealDB(config)
+	ApplyMigration: func(config shared.DatabaseConfig, name string, description string) error {
+		db, err := GetConnection(config)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
-		applySQL := fmt.Sprintf(`INSERT INTO %s (name) VALUES ($name);`, VersionTableName)
+		applySQL := fmt.Sprintf(`INSERT INTO %s (name, description) VALUES ($name, $description);`, VersionTableName)
 
 		_, err = db.Query(applySQL, map[string]interface{}{
-			"name": name,
+			"name":        name,
+			"description": description,
 		})
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		return nil
 	},
-	FindAppliedMigrations: func(config DatabaseConfig) ([]shared.AppliedMigration, error) {
-		db, err := getSurrealDB(config)
+	FindAppliedMigrations: func(config shared.DatabaseConfig) ([]shared.AppliedMigration, error) {
+		db, err := GetConnection(config)
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 
 		applySQL := fmt.Sprintf(`SELECT * FROM %s ORDER BY applied_on ASC;`, VersionTableName)
 		migrationData, err := db.Query(applySQL, nil)
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 
 		appliedMigraitons, err := surrealdb.SmartUnmarshal[[]shared.AppliedMigration](migrationData, err)
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 
 		return appliedMigraitons, nil
 	},
-	RollbackMigration: func(config DatabaseConfig, name string) error {
-		db, err := getSurrealDB(config)
+	RollbackMigration: func(config shared.DatabaseConfig, name string) error {
+		db, err := GetConnection(config)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		applySQL := fmt.Sprintf(`DELETE FROM %s where name = $name;`, VersionTableName)
@@ -86,29 +89,46 @@ var SurrealDBStrategy = DatabaseStrategy{
 			"name": name,
 		})
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		return nil
 	},
-	ResetMigrations: func(config DatabaseConfig) error {
-		db, err := getSurrealDB(config)
+	ResetMigrations: func(config shared.DatabaseConfig) error {
+		db, err := GetConnection(config)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		applySQL := fmt.Sprintf(`DELETE FROM %s;`, VersionTableName)
 
 		_, err = db.Query(applySQL, nil)
 		if err != nil {
-			panic(err)
+			return err
+		}
+
+		return nil
+	},
+	Exec: func(config shared.DatabaseConfig, sql string, params map[string]interface{}) error {
+		db, err := GetConnection(config)
+		if err != nil {
+			return err
+		}
+
+		_, err = db.Query(sql, params)
+		if err != nil {
+			return err
 		}
 
 		return nil
 	},
 }
 
-func getSurrealDB(config DatabaseConfig) (*surrealdb.DB, error) {
+func GetConnection(config shared.DatabaseConfig) (*surrealdb.DB, error) {
+	if _conn != nil {
+		return _conn, nil
+	}
+
 	db, err := surrealdb.New(fmt.Sprintf("ws://%s:%v/rpc", config.Host, config.Port))
 	if err != nil {
 		panic(err)
@@ -127,5 +147,7 @@ func getSurrealDB(config DatabaseConfig) (*surrealdb.DB, error) {
 		return nil, err
 	}
 
-	return db, nil
+	_conn = db
+
+	return _conn, nil
 }

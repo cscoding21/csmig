@@ -14,9 +14,9 @@ func getMigrationName() string {
 	return timestamp
 }
 
-func NewMigrationObject(name string) shared.Migration {
+func NewMigrationObject(description string) shared.Migration {
 	return shared.Migration{
 		Name:        getMigrationName(),
-		Description: "first migration",
+		Description: description,
 	}
 }

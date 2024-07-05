@@ -34,7 +34,12 @@ func Init() error {
 	}
 
 	//---create or overwrite the runner file
-	err = writeInitialRunner(manifest, migrationsDir)
+	err = writeRunner(manifest, migrationsDir)
+	if err != nil {
+		return err
+	}
+
+	err = writeRunnerTest(manifest, migrationsDir)
 	if err != nil {
 		return err
 	}
@@ -49,9 +54,7 @@ func Init() error {
 }
 
 // NewMigration creates a new migration
-func NewMigration(manifestPath string, description string) error {
-	manifest := shared.LoadManifest(manifestPath)
-
+func NewMigration(manifest shared.Manifest, description string) error {
 	builder := csgen.NewCSGenBuilderForOneOffFile("csmig", manifest.GeneratorPackage)
 
 	migrationName := getMigrationName()
@@ -61,7 +64,7 @@ func NewMigration(manifestPath string, description string) error {
 		Description: description,
 	}
 
-	builder.WriteString(writeMigrationFile(migration))
+	builder.WriteString(getMigrationFileContents(migration))
 	migrationFileName := fmt.Sprintf("%s_gen.go", migrationName)
 	migrationFilePath := path.Join(manifest.ProjectRoot, manifest.GeneratorPath, migrationFileName)
 
@@ -92,10 +95,15 @@ func writeCatalogFile(manifest shared.Manifest) error {
 }
 
 func writeInitialManifefst(manifest shared.Manifest, outputPath string) error {
-	file := path.Join(outputPath, "manifest.yaml")
+	file := path.Join(outputPath, ".csmig.yaml")
 	if _, err := os.Stat(file); os.IsNotExist(err) {
 		builder := strings.Builder{}
 		builder.WriteString(csgen.ExecuteTemplate("csmig_manifest", manifestTemplateString, manifest))
+
+		err = os.MkdirAll(outputPath, 0755)
+		if err != nil {
+			return err
+		}
 
 		err = os.WriteFile(file, []byte(builder.String()), 0644)
 		if err != nil {
@@ -106,7 +114,7 @@ func writeInitialManifefst(manifest shared.Manifest, outputPath string) error {
 	return nil
 }
 
-func writeInitialRunner(manifest shared.Manifest, outputPath string) error {
+func writeRunner(manifest shared.Manifest, outputPath string) error {
 	builder := csgen.NewCSGenBuilderForFile("csmig", manifest.GeneratorPackage)
 	builder.WriteString(runFileTemplateString)
 
@@ -114,33 +122,19 @@ func writeInitialRunner(manifest shared.Manifest, outputPath string) error {
 	return csgen.WriteGeneratedGoFile(file, builder.String())
 }
 
-func writeMigrationFile(migration shared.Migration) string {
+func writeRunnerTest(manifest shared.Manifest, outputPath string) error {
+	builder := csgen.NewCSGenBuilderForFile("csmig", manifest.GeneratorPackage)
+	builder.WriteString(runFileTestTemplateString)
+
+	file := path.Join(outputPath, "runner_test.go")
+	return csgen.WriteGeneratedGoFile(file, builder.String())
+}
+
+func getMigrationFileContents(migration shared.Migration) string {
 	contents := csgen.ExecuteTemplate("migration", migrationTemplateString, migration)
 
 	return contents
 }
-
-// // LoadManifest loads the manifest file and returns a slice of ObjectMap structs.
-// func LoadManifest(path ...string) shared.Manifest {
-// 	mp := shared.GetManifestPath(path...)
-// 	log.Printf("Loading manifest file: %s\n", path)
-// 	yfile, err := os.ReadFile(mp)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-
-// 	var manifest shared.Manifest
-// 	err = yaml.Unmarshal(yfile, &manifest)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-
-// 	if len(manifest.GeneratorPackage) == 0 {
-// 		manifest.GeneratorPackage = csgen.InferPackageFromOutputPath(manifest.GeneratorPath)
-// 	}
-
-// 	return manifest
-// }
 
 var catalogTemplateString = `
 import (
@@ -150,7 +144,7 @@ import (
 func FindDiscoveredMigrations() []shared.Migration {
 	out := []shared.Migration{}
 
-	//---Add created migrations here{{range .}}    
+	//---Generated migrations will be appended here via code generation{{range .}}    
 	out = append(out, {{ .Name }}){{end}}
 
 	return out
@@ -158,17 +152,16 @@ func FindDiscoveredMigrations() []shared.Migration {
 `
 
 var migrationTemplateString = `
-
 import "github.com/cscoding21/csmig/shared"
 
 var {{ .Name }} = shared.Migration{
 	Name:        "{{.Name}}",
 	Description: "{{.Description}}",
-	Up: func() error {
+	Up: func(ds shared.DatabaseStrategy) error {
 		//---your code here
 		panic("migration up not implemented")
 	},
-	Down: func() error {
+	Down: func(ds shared.DatabaseStrategy) error {
 		// your code here
 		panic("migration down not implemented")
 	},
@@ -182,10 +175,51 @@ import (
 	"github.com/cscoding21/csmig/shared"
 )
 
-// ApplyMigrations run any migrations that have not been applied yet.
-func ApplyMigrations(manifest shared.Manifest) error {
+// Apply run any migrations that have not been applied yet.
+func Apply(manifest shared.Manifest) error {
 	discoveredMigrations := FindDiscoveredMigrations()
 
+	//---get the persistence strategy as defined in the manifest
+	strategy, err := persistence.GetPersistenceStrategy(manifest.VersionStrategy)
+	if err != nil {
+		return err
+	}
+
+	//---make sure the required support tables have been created
+	err = strategy.EnsureInfrastructure(strategy.DBConfig)
+	if err != nil {
+		return err
+	}
+
+	//---retrieve a list of migrations that have already been applied
+	appliedMigrations, err := strategy.FindAppliedMigrations(strategy.DBConfig)
+	if err != nil {
+		return err
+	}
+
+	//---iterate over the migrations that have been created and apply any that have not been applied yet
+	for _, dm := range discoveredMigrations {
+		//---skip if migration is already applied
+		if migrationIsApplied(dm.Name, appliedMigrations) {
+			continue
+		}
+
+		err = dm.Up(strategy)
+		if err != nil {
+			return err
+		}
+
+		err = strategy.ApplyMigration(strategy.DBConfig, dm.Name, dm.Description)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// Rollback call the "Down" method of the most recently applied migration
+func Rollback(manifest shared.Manifest) error {
 	strategy, err := persistence.GetPersistenceStrategy(manifest.VersionStrategy)
 	if err != nil {
 		return err
@@ -196,24 +230,22 @@ func ApplyMigrations(manifest shared.Manifest) error {
 		return err
 	}
 
-	for _, dm := range discoveredMigrations {
-		//---skip if migration is already applied
-		if migrationIsApplied(dm.Name, appliedMigrations) {
-			continue
-		}
+	latestMigration := getLatestMigration(appliedMigrations)
 
-		err = dm.Up()
-		if err != nil {
-			return err
-		}
+	if latestMigration == nil {
+		return nil
+	}
 
-		err = strategy.ApplyMigration(strategy.DBConfig, dm.Name)
-		if err != nil {
-			return err
+	for _, dm := range FindDiscoveredMigrations() {
+		if latestMigration.Name == dm.Name {
+			err = dm.Down(strategy)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
-	return nil
+	return strategy.RollbackMigration(strategy.DBConfig, latestMigration.Name)
 }
 
 // FindAppliedMigrations return a list of all migrations that have been applied
@@ -260,7 +292,79 @@ func migrationIsApplied(name string, appliedMigrations []shared.AppliedMigration
 	return false
 }
 
+func getLatestMigration(appliedMigrations []shared.AppliedMigration) *shared.AppliedMigration {
+	if len(appliedMigrations) == 0 {
+		return nil
+	}
+
+	out := appliedMigrations[len(appliedMigrations)-1]
+
+	for _, am := range appliedMigrations {
+		if am.Name > out.Name {
+			out = am
+		}
+	}
+
+	return &out
+}
 `
+
+var runFileTestTemplateString = `
+import (
+	"fmt"
+	"testing"
+
+	"github.com/cscoding21/csmig/shared"
+)
+
+func TestApply(t *testing.T) {
+	manifest := shared.LoadManifest(".csmig.yaml")
+
+	err := Apply(manifest)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestRollback(t *testing.T) {
+	manifest := shared.LoadManifest(".csmig.yaml")
+
+	err := Rollback(manifest)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestFindApplyMigrations(t *testing.T) {
+	manifest := shared.LoadManifest(".csmig.yaml")
+
+	appliedMigrations, err := FindAppliedMigrations(manifest)
+	if err != nil {
+		t.Error(err)
+	}
+
+	for _, am := range appliedMigrations {
+		fmt.Println(am.Name, am.AppliedOn)
+	}
+}
+
+func TestFindUnapplyMigrations(t *testing.T) {
+	manifest := shared.LoadManifest(".csmig.yaml")
+
+	unappliedMigrations, err := FindUnappliedMigrations(manifest)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if len(unappliedMigrations) == 0 {
+		fmt.Println("No unapplied migrations were found")
+	}
+
+	for _, um := range unappliedMigrations {
+		fmt.Println(um.Name, um.FilePath)
+	}
+}
+ `
 
 var manifestTemplateString = `
 #####################################################################
@@ -268,17 +372,17 @@ var manifestTemplateString = `
 # https://github.com/cscoding21/csmig
 
 # The project root.  This will be used when necessary for determining file locations
-project_root: /home/jeph/projects/cscoding21/csmig
+project_root: {{.ProjectRoot}}
 
 # The path where migrations functionality will live
-generator_path: migrations
+generator_path: {{.GeneratorPath}}
 
 # The name of the implementation that is used for naming and comments for generated files
-# implementation_name: csmig
+# implementation_name: {{.ImplementationName}}
 
 # The package name that will be used for generated migration files
-generator_package: migrations
+generator_package: {{.GeneratorPackage}}
 
 # The database (or other persistence strategy) that will be used to track migration state
-version_strategy: surrealdb
+version_strategy: {{.VersionStrategy}}
 `

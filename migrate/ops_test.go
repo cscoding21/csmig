@@ -37,7 +37,7 @@ func TestApplyMigration(t *testing.T) {
 		t.Error(err)
 	}
 
-	err = ApplyMigration(strategy, "m123")
+	err = ApplyMigration(strategy, "m123", "unit test migration")
 	if err != nil {
 		t.Error(err)
 	}

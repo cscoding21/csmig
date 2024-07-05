@@ -7,25 +7,24 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/cscoding21/csmig/persistence"
 	"github.com/cscoding21/csmig/shared"
 )
 
 // EnsureInfrastructure create the migration table in the target DB if it doesn't exist.
-func EnsureInfrastructure(strategy persistence.DatabaseStrategy) error {
+func EnsureInfrastructure(strategy shared.DatabaseStrategy) error {
 	return strategy.EnsureInfrastructure(strategy.DBConfig)
 }
 
 // ApplyMigration record a migration as being applied in the database
-func ApplyMigration(strategy persistence.DatabaseStrategy, name string) error {
-	return strategy.ApplyMigration(strategy.DBConfig, name)
+func ApplyMigration(strategy shared.DatabaseStrategy, name string, description string) error {
+	return strategy.ApplyMigration(strategy.DBConfig, name, description)
 }
 
-func FindAppliedMigrations(strategy persistence.DatabaseStrategy) ([]shared.AppliedMigration, error) {
+func FindAppliedMigrations(strategy shared.DatabaseStrategy) ([]shared.AppliedMigration, error) {
 	return strategy.FindAppliedMigrations(strategy.DBConfig)
 }
 
-func RollbackMigration(strategy persistence.DatabaseStrategy, name string) error {
+func RollbackMigration(strategy shared.DatabaseStrategy, name string) error {
 	return strategy.RollbackMigration(strategy.DBConfig, name)
 }
 
