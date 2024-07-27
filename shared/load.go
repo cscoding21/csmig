@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/cscoding21/csgen"
@@ -44,10 +45,12 @@ func getManifestPath(manifestPath ...string) string {
 			panic(fmt.Sprintf("Manifest file must be a YAML file. %s is not a YAML file.", userManifestPath))
 		}
 
-		//---if the manifest file is an absolute path, don't prepend the present working directory
-		if path.IsAbs(userManifestPath) {
-			return userManifestPath
+		out, err := filepath.Abs(userManifestPath)
+		if err != nil {
+			panic(err)
 		}
+
+		return out
 	}
 
 	//---if not, try to discover by searching in common locations
@@ -55,13 +58,20 @@ func getManifestPath(manifestPath ...string) string {
 	if err != nil {
 		panic(err)
 	}
-	mpOpts := []string{".csmig.yaml", "migrations/.csmig.yaml"}
+
+	defaultManifestFileName := ".csmig.yaml"
+	mpOpts := []string{
+		defaultManifestFileName,
+		path.Join("migrations", defaultManifestFileName),
+	}
 
 	for _, mo := range mpOpts {
 		mp := path.Join(pwd, mo)
 		if _, err := os.Stat(mp); err == nil {
 			return mp
 		}
+
+		log.Printf("Unable to find manifest file at %s", mp)
 	}
 
 	panic("Unable to find manifest file.  Please create a manifest file in the current directory or in the migrations directory.")

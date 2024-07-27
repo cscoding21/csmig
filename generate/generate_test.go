@@ -30,18 +30,31 @@ func TestWriteMigrationFile(t *testing.T) {
 
 func TestNewMigration(t *testing.T) {
 	manifest := shared.LoadManifest("migrations/.csmig.yaml")
-	err := NewMigration(manifest, "This is a test migration")
+	mig, err := NewMigration(manifest, "This is a test migration")
 	if err != nil {
-		t.Error("migration name should have been set")
+		t.Error("TestNewMigration failed: ", err)
 	}
+
+	t.Log("migration name: ", mig.Name)
+
+	// err = RemoveMigration(manifest, mig.Name)
+	// if err != nil {
+	// 	t.Error("TestNewMigration failed: ", err)
+	// }
 }
 
 func TestRemoveMigration(t *testing.T) {
 	manifest := shared.LoadManifest("migrations/.csmig.yaml")
-	name := "m1720131749777958628"
-	err := RemoveMigration(manifest, name)
+
+	//---ensure there is a migration to remove
+	mig, err := NewMigration(manifest, "This is a test migration for integration testing")
 	if err != nil {
-		t.Error("migration name should have been set")
+		t.Error("unable to add new migration to rest removal")
+	}
+
+	err = RemoveMigration(manifest, mig.Name)
+	if err != nil {
+		t.Error("migration name should have been set: ", err)
 	}
 }
 

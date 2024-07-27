@@ -36,10 +36,12 @@ var newCmd = &cobra.Command{
 		message, _ := cmd.Flags().GetString("message")
 		manifest := shared.LoadManifest()
 
-		err := generate.NewMigration(manifest, message)
+		mig, err := generate.NewMigration(manifest, message)
 		if err != nil {
 			panic(err)
 		}
+
+		fmt.Println("Migration created: ", mig.Name)
 	},
 }
 

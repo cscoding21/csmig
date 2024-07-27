@@ -55,7 +55,7 @@ func Init() error {
 }
 
 // NewMigration creates a new migration
-func NewMigration(manifest shared.Manifest, description string) error {
+func NewMigration(manifest shared.Manifest, description string) (shared.Migration, error) {
 	builder := csgen.NewCSGenBuilderForOneOffFile("csmig", manifest.GeneratorPackage)
 
 	migrationName := getMigrationName()
@@ -76,7 +76,7 @@ func NewMigration(manifest shared.Manifest, description string) error {
 
 	writeCatalogFile(manifest)
 
-	return nil
+	return migration, nil
 }
 
 func RemoveMigration(manifest shared.Manifest, name string) error {
@@ -184,18 +184,25 @@ func FindDiscoveredMigrations() []shared.Migration {
 `
 
 var migrationTemplateString = `
-import "github.com/cscoding21/csmig/shared"
+import (
+	"fmt"
+	"github.com/cscoding21/csmig/shared"
+)
 
 var {{ .Name }} = shared.Migration{
 	Name:        "{{.Name}}",
 	Description: "{{.Description}}",
 	Up: func(ds shared.DatabaseStrategy) error {
 		//---your code here
-		panic("migration up not implemented")
+		fmt.Printf("migration up for {{ .Name }} not implemented")
+
+		return nil
 	},
 	Down: func(ds shared.DatabaseStrategy) error {
 		// your code here
-		panic("migration down not implemented")
+		fmt.Printf("migration down for {{ .Name }} not implemented")
+
+		return nil
 	},
 }
 `
