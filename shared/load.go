@@ -55,7 +55,7 @@ func getManifestPath(manifestPath ...string) string {
 	if err != nil {
 		panic(err)
 	}
-	mpOpts := []string{".csmap.yaml", "migrations/.csmig.yaml"}
+	mpOpts := []string{".csmig.yaml", "migrations/.csmig.yaml"}
 
 	for _, mo := range mpOpts {
 		mp := path.Join(pwd, mo)
