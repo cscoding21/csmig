@@ -54,10 +54,10 @@ func getManifestPath(manifestPath ...string) string {
 	}
 
 	//---if not, try to discover by searching in common locations
-	pwd, err := os.Getwd()
-	if err != nil {
-		panic(err)
-	}
+	// pwd, err := os.Getwd()
+	// if err != nil {
+	// 	panic(err)
+	// }
 
 	defaultManifestFileName := ".csmig.yaml"
 	mpOpts := []string{
@@ -66,8 +66,13 @@ func getManifestPath(manifestPath ...string) string {
 	}
 
 	for _, mo := range mpOpts {
-		mp := path.Join(pwd, mo)
+		mp, err := filepath.Abs(mo)
+		if err != nil {
+			panic(err)
+		}
+
 		if _, err := os.Stat(mp); err == nil {
+			log.Printf("Found manifest file at %s", mp)
 			return mp
 		}
 
