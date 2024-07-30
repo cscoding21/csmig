@@ -34,9 +34,9 @@ var newCmd = &cobra.Command{
 		fmt.Println("Creating new migration...")
 
 		message, _ := cmd.Flags().GetString("message")
-		manifest := shared.LoadManifest()
+		config := shared.GetTestConfig()
 
-		mig, err := generate.NewMigration(manifest, message)
+		mig, err := generate.NewMigration(config, message)
 		if err != nil {
 			panic(err)
 		}

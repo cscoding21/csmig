@@ -33,8 +33,8 @@ var appliedCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Finding applied migrations...")
 
-		manifest := shared.LoadManifest()
-		strategy, err := persistence.GetPersistenceStrategy(manifest.VersionStrategy)
+		config := shared.GetTestConfig()
+		strategy, err := persistence.GetPersistenceStrategy(config.DatabaseStrategyName)
 		if err != nil {
 			panic(err)
 		}

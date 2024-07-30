@@ -38,16 +38,16 @@ to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Migration status...")
 
-		manifest := shared.LoadManifest()
-		strategy, _ := persistence.GetPersistenceStrategy(manifest.VersionStrategy)
+		config := shared.GetTestConfig()
+		strategy, _ := persistence.GetPersistenceStrategy(config.DatabaseStrategyName)
 
-		discoverd := migrate.FindDiscoveredMigrationFiles(manifest)
+		discoverd := migrate.FindDiscoveredMigrationFiles(config)
 		applied, _ := migrate.FindAppliedMigrations(strategy)
 
 		fmt.Println("--------------- CSMig Status ---------------")
 		fmt.Println("CSMig Version: ", version.Version)
-		fmt.Println("Migrations Directory: ", manifest.GetMigrationPath())
-		fmt.Println("Persistence Strategy: ", manifest.VersionStrategy)
+		fmt.Println("Migrations Directory: ", config.GetMigrationPath())
+		fmt.Println("Persistence Strategy: ", config.DatabaseStrategyName)
 		fmt.Println("---")
 		fmt.Println("Discovered Migrations: ")
 		for _, d := range discoverd {

@@ -28,10 +28,10 @@ func RollbackMigration(strategy shared.DatabaseStrategy, name string) error {
 }
 
 // FindDiscoveredMigrationFiles iterated over files in the migratin path and return all created migrations
-func FindDiscoveredMigrationFiles(manifest shared.Manifest) []shared.Migration {
+func FindDiscoveredMigrationFiles(config shared.MigratorConfig) []shared.Migration {
 	migrations := []shared.Migration{}
 
-	files, err := filepath.Glob(path.Join(manifest.GetMigrationPath(), "/m*_gen.go"))
+	files, err := filepath.Glob(path.Join(config.GeneratorPath, "/m*_gen.go"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -41,7 +41,7 @@ func FindDiscoveredMigrationFiles(manifest shared.Manifest) []shared.Migration {
 		mn := strings.Replace(fn, "_gen.go", "", 1)
 		migrations = append(migrations, shared.Migration{
 			FilePath: file,
-			Package:  manifest.GeneratorPackage,
+			Package:  config.GeneratorPackage,
 			Name:     mn,
 		})
 	}

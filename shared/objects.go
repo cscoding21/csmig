@@ -1,7 +1,6 @@
 package shared
 
 import (
-	"path"
 	"time"
 )
 
@@ -23,26 +22,26 @@ type AppliedMigration struct {
 }
 
 // Manifest strongly typed respresentation of the manifest file.
-type Manifest struct {
-	ManifestPath       string `yaml:"manifest_path"`
-	ProjectRoot        string `yaml:"project_root"`
-	GeneratorPath      string `yaml:"generator_path"`
-	GeneratorPackage   string `yaml:"generator_package"`
-	ImplementationName string `yaml:"implementation_name"`
-	VersionStrategy    string `yaml:"version_strategy"`
+type MigratorConfig struct {
+	ManifestPath         string         `yaml:"manifest_path"`
+	GeneratorPath        string         `yaml:"generator_path"`
+	GeneratorPackage     string         `yaml:"generator_package"`
+	ImplementationName   string         `yaml:"implementation_name"`
+	DatabaseStrategyName string         `yaml:"database_strategy_name"`
+	DatabaseStrategy     DatabaseConfig `yaml:"database_strategy"`
 
 	Migrations []Migration `yaml:"migrations"`
 }
 
 // DatabaseConfig contains the configuration for the database to be used by the migration system.
 type DatabaseConfig struct {
-	Name      string
-	Host      string
-	Port      int
-	User      string
-	Password  string
-	Database  string
-	Namespace string
+	Name      string `yaml:"name"`
+	Host      string `yaml:"host"`
+	Port      int    `yaml:"port"`
+	User      string `yaml:"user"`
+	Password  string `yaml:"password"`
+	Database  string `yaml:"database"`
+	Namespace string `yaml:"namespace"`
 }
 
 // DatabaseStrategy defines the interface for a database strategy.
@@ -58,6 +57,17 @@ type DatabaseStrategy struct {
 }
 
 // GetMigrationPath return the path that migrations will be stored based on properties in the manifest object.
-func (manifest *Manifest) GetMigrationPath() string {
-	return path.Join(manifest.ProjectRoot, manifest.GeneratorPath)
+func (manifest *MigratorConfig) GetMigrationPath() string {
+	// return path.Join(manifest.ProjectRoot, manifest.GeneratorPath)
+	return manifest.GeneratorPath
+}
+
+func GetTestConfig() MigratorConfig {
+	config := MigratorConfig{
+		GeneratorPath:        "migrations",
+		GeneratorPackage:     "migrations",
+		DatabaseStrategyName: "surrealdb",
+	}
+
+	return config
 }

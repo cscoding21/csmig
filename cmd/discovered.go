@@ -33,8 +33,8 @@ var discoveredCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Finding discovered migrations...")
 
-		manifest := shared.LoadManifest()
-		discovered := migrate.FindDiscoveredMigrationFiles(manifest)
+		config := shared.GetTestConfig()
+		discovered := migrate.FindDiscoveredMigrationFiles(config)
 
 		for _, d := range discovered {
 			fmt.Println(d.Name, d.Description)

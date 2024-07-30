@@ -9,7 +9,7 @@ import (
 )
 
 func TestFindDiscoveredMigrations(t *testing.T) {
-	manifest := shared.LoadManifest("../generate/migrations/.csmig.yaml")
+	manifest := shared.GetTestConfig()
 	migrations := FindDiscoveredMigrationFiles(manifest)
 
 	if len(migrations) == 0 {
@@ -20,8 +20,8 @@ func TestFindDiscoveredMigrations(t *testing.T) {
 }
 
 func TestEnsureInfrastructure(t *testing.T) {
-	manifest := shared.LoadManifest("../generate/migrations/.csmig.yaml")
-	strategy, err := persistence.GetPersistenceStrategy(manifest.VersionStrategy)
+	manifest := shared.GetTestConfig()
+	strategy, err := persistence.GetPersistenceStrategy(manifest.DatabaseStrategyName)
 	if err != nil {
 		t.Error(err)
 	}
@@ -33,8 +33,8 @@ func TestEnsureInfrastructure(t *testing.T) {
 }
 
 func TestApplyMigration(t *testing.T) {
-	manifest := shared.LoadManifest("../generate/migrations/.csmig.yaml")
-	strategy, err := persistence.GetPersistenceStrategy(manifest.VersionStrategy)
+	config := shared.GetTestConfig()
+	strategy, err := persistence.GetPersistenceStrategy(config.DatabaseStrategyName)
 	if err != nil {
 		t.Error(err)
 	}
@@ -46,8 +46,8 @@ func TestApplyMigration(t *testing.T) {
 }
 
 func TestRollbackMigration(t *testing.T) {
-	manifest := shared.LoadManifest("../generate/migrations/.csmig.yaml")
-	strategy, err := persistence.GetPersistenceStrategy(manifest.VersionStrategy)
+	config := shared.GetTestConfig()
+	strategy, err := persistence.GetPersistenceStrategy(config.DatabaseStrategyName)
 	if err != nil {
 		t.Error(err)
 	}
@@ -59,8 +59,8 @@ func TestRollbackMigration(t *testing.T) {
 }
 
 func TestFindApplyMigrations(t *testing.T) {
-	manifest := shared.LoadManifest("../generate/migrations/.csmig.yaml")
-	strategy, err := persistence.GetPersistenceStrategy(manifest.VersionStrategy)
+	config := shared.GetTestConfig()
+	strategy, err := persistence.GetPersistenceStrategy(config.DatabaseStrategyName)
 	if err != nil {
 		t.Error(err)
 	}

@@ -32,9 +32,9 @@ var removeCmd = &cobra.Command{
 		fmt.Println("remove called")
 
 		name, _ := cmd.Flags().GetString("name")
-		manifest := shared.LoadManifest()
+		config := shared.GetTestConfig()
 
-		err := generate.RemoveMigration(manifest, name)
+		err := generate.RemoveMigration(config, name)
 		if err != nil {
 			panic(err)
 		}

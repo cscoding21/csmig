@@ -7,8 +7,8 @@ import (
 )
 
 func TestWriteCatalogFile(t *testing.T) {
-	manifest := shared.LoadManifest("migrations/.csmig.yaml")
-	err := writeCatalogFile(manifest)
+	config := shared.GetTestConfig()
+	err := writeCatalogFile(config)
 	if err != nil {
 		t.Error(err)
 	}
@@ -29,8 +29,8 @@ func TestWriteMigrationFile(t *testing.T) {
 }
 
 func TestNewMigration(t *testing.T) {
-	manifest := shared.LoadManifest("migrations/.csmig.yaml")
-	mig, err := NewMigration(manifest, "This is a test migration")
+	config := shared.GetTestConfig()
+	mig, err := NewMigration(config, "This is a test migration")
 	if err != nil {
 		t.Error("TestNewMigration failed: ", err)
 	}
@@ -44,17 +44,26 @@ func TestNewMigration(t *testing.T) {
 }
 
 func TestRemoveMigration(t *testing.T) {
-	manifest := shared.LoadManifest("migrations/.csmig.yaml")
+	config := shared.GetTestConfig()
 
 	//---ensure there is a migration to remove
-	mig, err := NewMigration(manifest, "This is a test migration for integration testing")
+	mig, err := NewMigration(config, "This is a test migration for integration testing")
 	if err != nil {
 		t.Error("unable to add new migration to rest removal")
 	}
 
-	err = RemoveMigration(manifest, mig.Name)
+	err = RemoveMigration(config, mig.Name)
 	if err != nil {
 		t.Error("migration name should have been set: ", err)
+	}
+}
+
+func TestRemoveLatestMigration(t *testing.T) {
+	config := shared.GetTestConfig()
+
+	err := RemoveLatestMigration(config)
+	if err != nil {
+		t.Error(err)
 	}
 }
 

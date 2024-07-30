@@ -21,7 +21,7 @@ var SurrealDBStrategy = shared.DatabaseStrategy{
 		Namespace: "test",
 	},
 	EnsureInfrastructure: func(config shared.DatabaseConfig) error {
-		db, err := GetConnection(config)
+		db, err := GetSurrealConnection(config)
 		if err != nil {
 			panic(err)
 		}
@@ -41,7 +41,7 @@ var SurrealDBStrategy = shared.DatabaseStrategy{
 		return nil
 	},
 	ApplyMigration: func(config shared.DatabaseConfig, name string, description string) error {
-		db, err := GetConnection(config)
+		db, err := GetSurrealConnection(config)
 		if err != nil {
 			return err
 		}
@@ -59,7 +59,7 @@ var SurrealDBStrategy = shared.DatabaseStrategy{
 		return nil
 	},
 	FindAppliedMigrations: func(config shared.DatabaseConfig) ([]shared.AppliedMigration, error) {
-		db, err := GetConnection(config)
+		db, err := GetSurrealConnection(config)
 		if err != nil {
 			return nil, err
 		}
@@ -78,7 +78,7 @@ var SurrealDBStrategy = shared.DatabaseStrategy{
 		return appliedMigraitons, nil
 	},
 	RollbackMigration: func(config shared.DatabaseConfig, name string) error {
-		db, err := GetConnection(config)
+		db, err := GetSurrealConnection(config)
 		if err != nil {
 			return err
 		}
@@ -95,7 +95,7 @@ var SurrealDBStrategy = shared.DatabaseStrategy{
 		return nil
 	},
 	ResetMigrations: func(config shared.DatabaseConfig) error {
-		db, err := GetConnection(config)
+		db, err := GetSurrealConnection(config)
 		if err != nil {
 			return err
 		}
@@ -110,7 +110,7 @@ var SurrealDBStrategy = shared.DatabaseStrategy{
 		return nil
 	},
 	Exec: func(config shared.DatabaseConfig, sql string, params map[string]interface{}) error {
-		db, err := GetConnection(config)
+		db, err := GetSurrealConnection(config)
 		if err != nil {
 			return err
 		}
@@ -124,7 +124,7 @@ var SurrealDBStrategy = shared.DatabaseStrategy{
 	},
 }
 
-func GetConnection(config shared.DatabaseConfig) (*surrealdb.DB, error) {
+func GetSurrealConnection(config shared.DatabaseConfig) (*surrealdb.DB, error) {
 	if _conn != nil {
 		return _conn, nil
 	}
