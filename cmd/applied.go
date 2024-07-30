@@ -34,7 +34,7 @@ var appliedCmd = &cobra.Command{
 		fmt.Println("Finding applied migrations...")
 
 		config := shared.GetTestConfig()
-		strategy, err := persistence.GetPersistenceStrategy(config.DatabaseStrategyName)
+		strategy, err := persistence.GetPersistenceStrategy(config)
 		if err != nil {
 			panic(err)
 		}

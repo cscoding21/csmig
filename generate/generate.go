@@ -74,7 +74,7 @@ func NewMigration(config shared.MigratorConfig, description string) (shared.Migr
 
 func RemoveMigration(config shared.MigratorConfig, name string) error {
 	//---remove the migration file
-	strategy, err := persistence.GetPersistenceStrategy(config.DatabaseStrategyName)
+	strategy, err := persistence.GetPersistenceStrategy(config)
 	if err != nil {
 		return err
 	}
@@ -205,7 +205,7 @@ func Apply(config shared.MigratorConfig) error {
 	discoveredMigrations := FindDiscoveredMigrations()
 
 	//---get the persistence strategy as defined in the config
-	strategy, err := persistence.GetPersistenceStrategy(config.DatabaseStrategyName)
+	strategy, err := persistence.GetPersistenceStrategy(config)
 	if err != nil {
 		return err
 	}
@@ -245,7 +245,7 @@ func Apply(config shared.MigratorConfig) error {
 
 // Rollback call the "Down" method of the most recently applied migration
 func Rollback(config shared.MigratorConfig) error {
-	strategy, err := persistence.GetPersistenceStrategy(config.DatabaseStrategyName)
+	strategy, err := persistence.GetPersistenceStrategy(config)
 	if err != nil {
 		return err
 	}
@@ -275,7 +275,7 @@ func Rollback(config shared.MigratorConfig) error {
 
 // FindAppliedMigrations return a list of all migrations that have been applied
 func FindAppliedMigrations(config shared.MigratorConfig) ([]shared.AppliedMigration, error) {
-	strategy, err := persistence.GetPersistenceStrategy(config.DatabaseStrategyName)
+	strategy, err := persistence.GetPersistenceStrategy(config)
 	if err != nil {
 		return nil, err
 	}
@@ -285,7 +285,7 @@ func FindAppliedMigrations(config shared.MigratorConfig) ([]shared.AppliedMigrat
 
 // FindUnappliedMigrations return a list of migrations that have not been applied yet.
 func FindUnappliedMigrations(config shared.MigratorConfig) ([]shared.Migration, error) {
-	strategy, err := persistence.GetPersistenceStrategy(config.DatabaseStrategyName)
+	strategy, err := persistence.GetPersistenceStrategy(config)
 	if err != nil {
 		return nil, err
 	}

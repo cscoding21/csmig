@@ -20,8 +20,8 @@ func TestFindDiscoveredMigrations(t *testing.T) {
 }
 
 func TestEnsureInfrastructure(t *testing.T) {
-	manifest := shared.GetTestConfig()
-	strategy, err := persistence.GetPersistenceStrategy(manifest.DatabaseStrategyName)
+	config := shared.GetTestConfig()
+	strategy, err := persistence.GetPersistenceStrategy(config)
 	if err != nil {
 		t.Error(err)
 	}
@@ -34,7 +34,7 @@ func TestEnsureInfrastructure(t *testing.T) {
 
 func TestApplyMigration(t *testing.T) {
 	config := shared.GetTestConfig()
-	strategy, err := persistence.GetPersistenceStrategy(config.DatabaseStrategyName)
+	strategy, err := persistence.GetPersistenceStrategy(config)
 	if err != nil {
 		t.Error(err)
 	}
@@ -47,7 +47,7 @@ func TestApplyMigration(t *testing.T) {
 
 func TestRollbackMigration(t *testing.T) {
 	config := shared.GetTestConfig()
-	strategy, err := persistence.GetPersistenceStrategy(config.DatabaseStrategyName)
+	strategy, err := persistence.GetPersistenceStrategy(config)
 	if err != nil {
 		t.Error(err)
 	}
@@ -60,7 +60,7 @@ func TestRollbackMigration(t *testing.T) {
 
 func TestFindApplyMigrations(t *testing.T) {
 	config := shared.GetTestConfig()
-	strategy, err := persistence.GetPersistenceStrategy(config.DatabaseStrategyName)
+	strategy, err := persistence.GetPersistenceStrategy(config)
 	if err != nil {
 		t.Error(err)
 	}

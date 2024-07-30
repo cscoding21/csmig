@@ -28,7 +28,7 @@ type MigratorConfig struct {
 	GeneratorPackage     string         `yaml:"generator_package"`
 	ImplementationName   string         `yaml:"implementation_name"`
 	DatabaseStrategyName string         `yaml:"database_strategy_name"`
-	DatabaseStrategy     DatabaseConfig `yaml:"database_strategy"`
+	DBConfig             DatabaseConfig `yaml:"database_strategy"`
 
 	Migrations []Migration `yaml:"migrations"`
 }

@@ -15,11 +15,13 @@ var persistenceStrategies = map[string]shared.DatabaseStrategy{
 }
 
 // GetPersistenceStrategy returns the persistence strategy for the given name.
-func GetPersistenceStrategy(name string) (shared.DatabaseStrategy, error) {
-	strategy, ok := persistenceStrategies[name]
+func GetPersistenceStrategy(config shared.MigratorConfig) (shared.DatabaseStrategy, error) {
+	strategy, ok := persistenceStrategies[config.DatabaseStrategyName]
 	if !ok {
 		return shared.DatabaseStrategy{}, errors.New("unknown persistence strategy")
 	}
+
+	strategy.DBConfig = config.DBConfig
 
 	return strategy, nil
 }

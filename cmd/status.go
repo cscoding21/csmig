@@ -39,7 +39,7 @@ to quickly create a Cobra application.`,
 		fmt.Println("Migration status...")
 
 		config := shared.GetTestConfig()
-		strategy, _ := persistence.GetPersistenceStrategy(config.DatabaseStrategyName)
+		strategy, _ := persistence.GetPersistenceStrategy(config)
 
 		discoverd := migrate.FindDiscoveredMigrationFiles(config)
 		applied, _ := migrate.FindAppliedMigrations(strategy)
