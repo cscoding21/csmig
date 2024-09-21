@@ -62,11 +62,21 @@ func (manifest *MigratorConfig) GetMigrationPath() string {
 	return manifest.GeneratorPath
 }
 
+// GetTestConfig returns a test config object to support unit tests.
 func GetTestConfig() MigratorConfig {
 	config := MigratorConfig{
 		GeneratorPath:        "migrations",
 		GeneratorPackage:     "migrations",
 		DatabaseStrategyName: "surrealdb",
+		DBConfig: DatabaseConfig{
+			Name:      "surrealdb",
+			Host:      "localhost",
+			Port:      9999,
+			User:      "root",
+			Password:  "root",
+			Database:  "test",
+			Namespace: "test",
+		},
 	}
 
 	return config

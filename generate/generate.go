@@ -21,12 +21,6 @@ func Init() error {
 	}
 	migrationsDir := path.Join(config.GeneratorPath)
 
-	//---create the initial manifest if it doesn't exist
-	// err := writeInitialManifefst(manifest, migrationsDir)
-	// if err != nil {
-	// 	return err
-	// }
-
 	//---create or overwrite the runner file
 	err := writeRunner(config, migrationsDir)
 	if err != nil {
